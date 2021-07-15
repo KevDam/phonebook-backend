@@ -1,0 +1,20 @@
+{
+  "name": "phonebook-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KevDam/phonebook-backend.git"
+  },
+  "author": "Kevin Dam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KevDam/phonebook-backend/issues"
+  },
+  "homepage": "https://github.com/KevDam/phonebook-backend#readme"
+}
