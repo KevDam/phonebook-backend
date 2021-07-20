@@ -4,6 +4,7 @@ const app = express()
 
 app.use(express.json())
 app.use(morgan(':method :url :status - :response-time ms :data'))
+app.use(express.static('build'))
 
 morgan.token('data', function (request, response) {
     return JSON.stringify(request.body)
