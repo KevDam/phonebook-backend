@@ -1,3 +1,5 @@
+import { getAllPersons, addPerson } from './mongo.js'
+
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
@@ -32,6 +34,7 @@ let persons = [
       "number": "39-23-6423122"
     }
 ]
+
 
 app.get('/', (request, response) => {
     response.send('<h1>Phonebook</h1>')
@@ -91,12 +94,11 @@ app.post('/api/persons', (request, response) => {
     }
 
     const person = {
-        id: generateId(),
         name: body.name,
         number: body.number
     }
 
-    persons = persons.concat(person)
+    persons.push(person)
     response.json(person)
 })
 
