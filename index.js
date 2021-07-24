@@ -4,20 +4,13 @@ const morgan = require('morgan')
 const app = express()
 const Person = require('./models/person')
 
+app.use(express.static('build'))
 app.use(express.json())
 app.use(morgan(':method :url :status - :response-time ms :data'))
-app.use(express.static('build'))
 
 morgan.token('data', function (request, response) {
     return JSON.stringify(request.body)
 })
-
-
-let persons = []
-Person.find({}).then(foundPersons => {
-    persons = foundPersons
-})
-
 
 app.get('/', (request, response) => {
     response.send('<h1>Phonebook</h1>')
@@ -29,34 +22,48 @@ app.get('/api/persons', (request, response) => {
     })
 })
 
-app.get('/api/persons/:id', (request, response) => {
-    Person.findById(request.params.id).then(found =>{
-        if (found) {
-            response.json(found)
-        } else {
-            response.status(404).end()
-        }
+app.get('/api/persons/:id', (request, response, next) => {
+    if (request.params.id.length !== 24) {
+        console.log('Error: Malformatted ID')
+        throw 'Malformatted ID'
+    } else {
+        Person.findById(request.params.id).then(found =>{
+            if (found) {
+                response.json(found)
+            } else {
+                response.status(404).end()
+            }
+        })
+        .catch(error => {
+            next(error)
+        })
+    }
+})
+
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndRemove(request.params.id).then(result => {
+        response.status(204).end()
     })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(p => p.id !== id)
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
 
-    response.status(204).end()
-})
+    const person = {
+      name: body.name,
+      number: body.number
+    }
 
-// const generateId = () => {
-//     const personIds = persons.map(p => p.id)
-//     let newId = 0
+    console.log(person)
 
-//     do {
-//         newId = Math.floor(Math.random() * 10000)
-//     } while (personIds.includes(newId))
-
-//     return newId
-
-// }
+    Person.findByIdAndUpdate(request.params.id, person)
+      .then(updatedPerson => {
+        console.log(updatedPerson)
+        response.json(updatedPerson)
+      })
+      .catch(error => next(error))
+  })
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
@@ -88,12 +95,25 @@ app.post('/api/persons', (request, response) => {
 })
 
 app.get('/info', (request, response) => {
-    let numPeople = persons.length
-    response.send(
-        `<div>Phonebook has info for ${numPeople} people</div>
-        <div>${new Date()}</div>`
-        )
+    Person.find({}).then(foundPersons => {
+        response.send(
+            `<div>Phonebook has info for ${foundPersons.length} people</div>
+            <div>${new Date()}</div>`
+            )
+    })
 })
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+  }
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
