@@ -65,24 +65,32 @@ app.put('/api/persons/:id', (request, response, next) => {
       .catch(error => next(error))
   })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
     console.log(body)
 
-    if (!body.name || !body.number) {
-        return response.status(400).json({
-            error: 'Name or number missing'
-        })
-    }
+    // if (!body.name || !body.number) {
+    //     return response.status(400).json({
+    //         error: 'Name or number missing'
+    //     })
+    // } else if (body.name.length < 3) {
+    //     return response.status(400).json({
+    //         error: 'Name must be at least 3 characters'
+    //     })
+    // } else if (body.number.length < 8) {
+    //     return response.status(400).json({
+    //         error: 'Number must be at least 8 digits'
+    //     })
+    // }
 
-    const personNames = persons.map(p => p.name.toLowerCase())
-    console.log(personNames)
-    console.log(body.name.toLowerCase())
-    if (personNames.includes(body.name.toLowerCase())) {
-        return response.status(400).json({
-            error: 'Name must be unique, name already exists in phonebook'
-        })
-    }
+    // const personNames = persons.map(p => p.name.toLowerCase())
+    // console.log(personNames)
+    // console.log(body.name.toLowerCase())
+    // if (personNames.includes(body.name.toLowerCase())) {
+    //     return response.status(400).json({
+    //         error: 'Name must be unique, name already exists in phonebook'
+    //     })
+    // }
 
     const person = new Person({
         name: body.name,
@@ -91,7 +99,7 @@ app.post('/api/persons', (request, response) => {
 
     person.save().then(savedPerson => {
         response.json(savedPerson)
-    })
+    }).catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
@@ -108,6 +116,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
       return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({error: error.message})
     }
 
     next(error)
